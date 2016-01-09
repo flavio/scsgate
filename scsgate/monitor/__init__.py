@@ -1,14 +1,11 @@
-#!/usr/bin/env python3
-
 import argparse
 import os
 import serial as pyserial
 import signal
 import sys
 import yaml
-import messages
 
-import time
+import scsgate.messages as messages
 
 def cli_opts():
     parser = argparse.ArgumentParser()
@@ -60,29 +57,34 @@ def setup_signal_handler():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGQUIT, signal_handler)
 
-setup_signal_handler()
-
-options = cli_opts()
+options = None
 devices = {}
 
-serial = pyserial.Serial(options.device, 115200)
+def main():
+    """ Entry point of the monitor cli tool """
 
-print("Enabling ASCII mode")
-serial.write(b"@MA")
-print(serial.read(1))
+    setup_signal_handler()
 
-print("Entering monitoring mode, press CTRL-C to quit")
+    options = cli_opts()
 
-while True:
-    serial.write(b"@R")
-    length = int(serial.read())
-    data = serial.read(length * 2)
-    message = messages.parse(data)
-    print(message)
-    if not options.config or message.entity is None or message.entity in devices:
-        continue
+    serial = pyserial.Serial(options.device, 115200)
 
-    print("New device found")
-    haID = input("Enter home assistant unique ID: ")
-    name = input("Enter name: ")
-    add_device(devices=devices,scsID=message.entity, haID=haID, name=name)
+    print("Enabling ASCII mode")
+    serial.write(b"@MA")
+    print(serial.read(1))
+
+    print("Entering monitoring mode, press CTRL-C to quit")
+
+    while True:
+        serial.write(b"@R")
+        length = int(serial.read())
+        data = serial.read(length * 2)
+        message = messages.parse(data)
+        print(message)
+        if not options.config or message.entity is None or message.entity in devices:
+            continue
+
+        print("New device found")
+        haID = input("Enter home assistant unique ID: ")
+        name = input("Enter name: ")
+        add_device(devices=devices,scsID=message.entity, haID=haID, name=name)
