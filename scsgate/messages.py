@@ -1,3 +1,5 @@
+from functools import reduce
+
 class SCSMessage:
     """ Base class for all SCS messages """
 
@@ -57,6 +59,10 @@ class StateMessage(SCSMessage):
                 source=self._source,
                 status=self._status,
                 raw=self._data)
+
+    @property
+    def toggled(self):
+        return self._status == "on"
 
     @property
     def entity(self):
@@ -139,3 +145,14 @@ def parse(data):
         return RequestStatusMessage(bytes)
     else:
         return UnknownMessage(bytes)
+
+def checksum_bytes(bytes):
+    """ Returns a XOR of all the bytes specified inside of the given list """
+
+    int_values = [int(x,16) for x in bytes]
+    int_xor = reduce(lambda x,y: x ^ y, int_values)
+    hex_xor = "{:X}".format(int_xor)
+    if len(hex_xor) % 2 != 0:
+        hex_xor = "0" + hex_xor
+
+    return str.encode(hex_xor)

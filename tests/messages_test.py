@@ -32,7 +32,7 @@ class TestMessages(unittest.TestCase):
         self.assertEqual(msg.status, "on")
         self.assertEqual(msg.destination, "33")
         self.assertEqual(msg.source, "00")
-        self.assertIsEqual(msg.destination, msg.entity)
+        self.assertEqual(msg.destination, msg.entity)
 
     def test_parse_turn_off_command(self):
         data = b"A83300120121A3"
@@ -67,3 +67,51 @@ class TestMessages(unittest.TestCase):
         self.assertEqual(msg.destination, "33")
         self.assertEqual(msg.source, "00")
 
+    def test_compute_checksum_bytes(self):
+        test_data = [
+            {
+                'bytes': [b"14", b"00", b"12", b"01"],
+                'check': b"07"
+            },
+            {
+                'bytes': [b"14", b"00", b"12", b"00"],
+                'check': b"06"
+            },
+            {
+                'bytes': [b"33", b"00", b"12", b"00"],
+                'check': b"21"
+            },
+            {
+                'bytes': [b"B8", b"33", b"12", b"01"],
+                'check': b"98"
+            },
+            {
+                'bytes': [b"33", b"00", b"15", b"00"],
+                'check': b"26"
+            },
+            {
+                'bytes': [b"b8", b"33", b"12", b"00"],
+                'check': b"99"
+            },
+            {
+                'bytes': [b"36", b"00", b"12", b"01"],
+                'check': b"25"
+            },
+            {
+                'bytes': [b"96", b"BE", b"31", b"00"],
+                'check': b"19"
+            }
+        ]
+
+        for d in test_data:
+            bytes = d['bytes']
+            expected = d['check']
+            actual = messages.checksum_bytes(bytes)
+            self.assertEqual(
+                actual,
+                expected,
+                "Expected {0} to return {1} instead got {2}".format(
+                    bytes,
+                    expected,
+                    actual)
+            )
