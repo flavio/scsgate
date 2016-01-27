@@ -1,4 +1,4 @@
-# scsgate [![Build Status](https://travis-ci.org/flavio/scsgate.svg?branch=master)](https://travis-ci.org/flavio/scsgate) [![Docs](https://readthedocs.org/projects/scsgate/badge/?version=latest)
+# scsgate [![Build Status](https://travis-ci.org/flavio/scsgate.svg?branch=master)](https://travis-ci.org/flavio/scsgate) [![Docs](https://readthedocs.org/projects/scsgate/badge/?version=latest)](https://readthedocs.org/projects/pyserial/badge/?version=latest)
 
 This python module allows to interact with a [SCSGate](https://goo.gl/aKnpDw)
 device.
