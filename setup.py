@@ -87,7 +87,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'scsmonitor=scsgate.monitor:main',
+            'scs-monitor=scsgate.monitor:main',
         ],
     },
 )

@@ -1,42 +1,45 @@
-from scsgate.messages import checksum_bytes, parse, StateMessage
+""" This module contains all the possible messages to send via
+scsgate.Reactor """
+
+from scsgate.messages import compose_telegram, parse, StateMessage
+
 
 class ExecutionError(BaseException):
+    """ Error raised when something goes wrong while executing a task """
     pass
 
+
 class BasicTask:
+    """ Basic task, not to be used directly """
 
-    def __init__(self, serial, logger):
-        self._serial = serial
-        self._logger = logger
-
-    def execute(self):
+    def execute(self, connection):
+        """ Method to be implemented by all subclasses """
         raise NotImplementedError()
 
 
 class MonitorTask(BasicTask):
+    """ Read the buffer and invokes the notification endpoint if there's
+        a relevant message """
 
-    def __init__(self, logger, serial, notification_endpoint):
-        BasicTask.__init__(self, serial, logger)
+    def __init__(self, notification_endpoint):
         self._notification_endpoint = notification_endpoint
         self._last_raw_state_message = None
 
-    def execute(self):
-        self._serial.write(b"@r")
-        length = int(self._serial.read(), 16)
+    def execute(self, connection):
+        connection.serial.write(b"@r")
+        length = int(connection.serial.read(), 16)
         if length == 0:
             return
-        data = self._serial.read(length * 2)
+        data = connection.serial.read(length * 2)
         message = parse(data)
         # Filter duplicated state messages. The filtering feature
         # of SCSGate is buggy and causes @r to always return 0 available
         # messages
         if isinstance(message, StateMessage):
             if self._last_raw_state_message == data:
-                self._logger.debug("Monitoring task: ignoring duplicated state message")
                 return
             else:
                 self._last_raw_state_message = data
-        self._logger.debug("Monitoring task: got message")
         self._notification_endpoint(message)
 
     def __str__(self):
@@ -44,107 +47,109 @@ class MonitorTask(BasicTask):
 
 
 class SetStatusTask(BasicTask):
+    """ Generic task to request a status change. To not be used directly """
 
-    def __init__(self, logger, serial, target, action):
-        BasicTask.__init__(self, serial, logger)
+    def __init__(self, target, action):
         self._target = target
         self._action = action
 
-    def execute(self):
+    def execute(self, connection):
         command = "@w{action}{target}".format(
-                action=self._action,
-                target=self._target)
+            action=self._action,
+            target=self._target)
 
-        self._serial.write(str.encode(command))
-        ret = self._serial.read()
+        connection.serial.write(str.encode(command))
+        ret = connection.serial.read()
         if ret != b'k':
-            raise ExecutionError("Error while setting status. Command {}, got {}".format(command, ret))
+            raise ExecutionError(
+                "Error while setting status. Command {}, got {}".format(
+                    command, ret))
 
     def __str__(self):
         return "SetStatusTask: target {} - action {}".format(
-                self._target, self._action)
+            self._target, self._action)
+
 
 class ToggleStatusTask(SetStatusTask):
-    def __init__(self, logger, serial, target, toggled):
+    """ Change the toggled status of a light or switch """
+
+    def __init__(self, target, toggled):
         self._toggled = toggled
         action = 1
         if toggled:
             action = 0
 
         SetStatusTask.__init__(
-                self,
-                target=target,
-                serial=serial,
-                logger=logger,
-                action=action)
+            self,
+            target=target,
+            action=action)
 
     def __str__(self):
         return "ToggleStatusTask: target {} - toggled {}".format(
-                self._target, self._toggled)
+            self._target, self._toggled)
+
 
 class RaiseRollerShutterTask(SetStatusTask):
-    def __init__(self, logger, serial, target):
+    """ Raise a roller shutter """
+
+    def __init__(self, target):
         SetStatusTask.__init__(
-                self,
-                target=target,
-                serial=serial,
-                logger=logger,
-                action=8)
+            self,
+            target=target,
+            action=8)
 
     def __str__(self):
         return "RaiseRollerShutterTask: target {}".format(
-                self._target)
+            self._target)
+
 
 class LowerRollerShutterTask(SetStatusTask):
-    def __init__(self, logger, serial, target):
+    """ Lower a roller shutter """
+
+    def __init__(self, target):
         SetStatusTask.__init__(
-                self,
-                target=target,
-                serial=serial,
-                logger=logger,
-                action=9)
+            self,
+            target=target,
+            action=9)
 
     def __str__(self):
         return "LowerRollerShutterTask: target {}".format(
-                self._target)
+            self._target)
+
 
 class HaltRollerShutterTask(SetStatusTask):
-    def __init__(self, logger, serial, target):
+    """ Halt a roller shutter """
+
+    def __init__(self, target):
         SetStatusTask.__init__(
-                self,
-                target=target,
-                serial=serial,
-                logger=logger,
-                action="A")
+            self,
+            target=target,
+            action="A")
 
     def __str__(self):
         return "HaltRollerShutterTask: target {}".format(
-                self._target)
+            self._target)
+
 
 class GetStatusTask(BasicTask):
+    """ Requests the current status of a device """
 
-    def __init__(self, logger, serial, target):
-        BasicTask.__init__(self, serial, logger)
+    def __init__(self, target):
         self._target = target
 
-    def execute(self):
-        command = b"@W7" + self.telegram()
-        self._serial.write(command)
-        ret = self._serial.read()
+    def execute(self, connection):
+        command = b"@W7" + compose_telegram([
+            str.encode(self._target),
+            b"00",
+            b"15",
+            b"00"])
+        connection.serial.write(command)
+        ret = connection.serial.read()
         if ret != b'k':
-            raise ExecutionError("Error while requesting status. Command {}, got {}".format(command, ret))
-        self._logger.debug("Successfully requested status for device {}".format(self._target))
-
-    def telegram(self):
-        msg = [
-                str.encode(self._target),
-                b"00",
-                b"15",
-                b"00"]
-        msg.append(checksum_bytes(msg))
-        ret = [b"A8"] + msg + [b"A3"]
-        return str.encode("".join([x.decode() for x in ret]))
+            raise ExecutionError(
+                "Error while requesting status. Command {}, got {}".format(
+                    command, ret))
 
     def __str__(self):
         return "GetStatusTask: target {}".format(
-                self._target)
+            self._target)

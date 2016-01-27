@@ -1,9 +1,19 @@
+""" This module contains an helper class to initiate a connection
+with the SCSGate device """
+
 import serial as pyserial
+
 
 class Connection:
     """ Connection to SCSGate device """
 
     def __init__(self, device, logger):
+        """ Initialize the class
+
+        Arguments:
+        device: string containing the serial device allocated to SCSGate
+        logger: instance of logging
+        """
         self._serial = pyserial.Serial(device, 115200)
 
         logger.info("Clearing buffers")
@@ -32,9 +42,12 @@ class Connection:
 
     @property
     def serial(self):
+        """ Returns the pyserial.Serial instance """
         return self._serial
 
     def close(self):
+        """ Closes the connection to the serial port and ensure no pending
+        operatoin are left """
         self._serial.write(b"@c")
         self._serial.read()
         self._serial.close()
