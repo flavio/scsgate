@@ -1,3 +1,5 @@
+# scsgate [![Build Status](https://travis-ci.org/flavio/scsgate.svg?branch=master)](https://travis-ci.org/flavio/scsgate)]
+
 This python module allows to interact with a [SCSGate](https://goo.gl/aKnpDw)
 device.
 
