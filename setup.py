@@ -2,7 +2,6 @@
 
 See:
 https://github.com/flavio/scsgate
-http://guidopic.altervista.org/alter/eibscsgt.html
 """
 
 # Always prefer setuptools over distutils
@@ -30,6 +29,7 @@ setup(
 
     # The project's main homepage.
     url='https://github.com/flavio/scsgate',
+    download_url='https://github.com/flavio/scsgate/archive/0.1.0.tar.gz',
 
     # Author details
     author='Flavio Castelli',
