@@ -63,4 +63,4 @@ This code is licensed under the MIT license.
 .. |Build Status| image:: https://travis-ci.org/flavio/scsgate.svg?branch=master
    :target: https://travis-ci.org/flavio/scsgate
 .. |Docs| image:: https://readthedocs.org/projects/scsgate/badge/?version=latest
-   :target: https://readthedocs.org/projects/pyserial/badge/?version=latest
+   :target: http://scsgate.readthedocs.org/en/latest/?badge=latest
