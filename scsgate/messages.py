@@ -65,10 +65,12 @@ class StateMessage(SCSMessage):
         return "StateMessage()"
 
     def __str__(self):
-        return "StateMessage: source {src} - status {status} - raw: {raw}".format(
-            src=self._source,
-            status=self._status,
-            raw=self._data)
+        return ("StateMessage: source {src} - "
+                "status {status} - "
+                "raw: {raw}").format(
+                   src=self._source,
+                   status=self._status,
+                   raw=self._data)
 
     @property
     def toggled(self):
@@ -126,7 +128,9 @@ class CommandMessage(SCSMessage):
         return "CommandMessage()"
 
     def __str__(self):
-        message = "CommandMessage: destination {dest} - source {src} - status {status} - raw: {raw}"
+        message = ("CommandMessage: destination {dest} - "
+                   "source {src} - status {status} - "
+                   "raw: {raw}")
 
         return message.format(
             src=self._source,
@@ -162,7 +166,8 @@ class ScenarioTriggeredMessage(SCSMessage):
         return "ScenarioTriggeredMessage()"
 
     def __str__(self):
-        message = "ScenarioTriggeredMessage: source {src} - scenario {scen} - raw: {raw}"
+        message = ("ScenarioTriggeredMessage: source {src} - "
+                   "scenario {scen} - raw: {raw}")
 
         return message.format(
             src=self._source,
@@ -197,10 +202,12 @@ class RequestStatusMessage(SCSMessage):
         return "RequestStatusMessage()"
 
     def __str__(self):
-        return "RequestStatusMessage: destination {dest} - source {src} - raw: {raw}".format(
-            src=self._source,
-            raw=self._data,
-            dest=self._destination)
+        return ("RequestStatusMessage: destination {dest} - "
+                "source {src} - "
+                "raw: {raw}").format(
+                    src=self._source,
+                    raw=self._data,
+                    dest=self._destination)
 
 
 def parse(data):

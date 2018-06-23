@@ -1,3 +1,5 @@
+# Test message parsing
+
 import unittest
 import os
 import sys
@@ -6,7 +8,8 @@ import sys
 # development one
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from scsgate import messages
+from scsgate import messages  # NOQA E402
+
 
 class TestMessages(unittest.TestCase):
     """ Test Message classses """
