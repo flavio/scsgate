@@ -58,4 +58,5 @@ class Reactor(threading.Thread):
 
     def append_task(self, task):
         """ Adds a tasks to the list of the jobs to execute """
+        self._logger.debug("scsgate.Reactor: add to queue")
         self._request_queue.put(task)

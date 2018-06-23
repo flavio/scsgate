@@ -2,7 +2,7 @@
 scsgate.Reactor """
 
 from scsgate.messages import compose_telegram, parse, StateMessage
-
+import socket
 
 class ExecutionError(BaseException):
     """ Error raised when something goes wrong while executing a task """
@@ -26,11 +26,14 @@ class MonitorTask(BasicTask):
         self._last_raw_state_message = None
 
     def execute(self, connection):
-        connection.serial.write(b"@r")
-        length = int(connection.serial.read(), 16)
+        connection.send(b"@r")
+        raw = connection.receive()
+        if (raw == b'k') or (raw is None):
+            return
+        length = int(raw[:1], 16)
         if length == 0:
             return
-        data = connection.serial.read(length * 2)
+        data = raw[1:]
         message = parse(data)
         # Filter duplicated state messages. The filtering feature
         # of SCSGate is buggy and causes @r to always return 0 available
@@ -58,9 +61,9 @@ class SetStatusTask(BasicTask):
             action=self._action,
             target=self._target)
 
-        connection.serial.write(str.encode(command))
-        ret = connection.serial.read()
-        if ret != b'k':
+        connection.send(str.encode(command))
+        ret = connection.receive()
+        if (ret != b'k') or (ret is None):
             raise ExecutionError(
                 "Error while setting status. Command {}, got {}".format(
                     command, ret))
@@ -143,9 +146,9 @@ class GetStatusTask(BasicTask):
             b"00",
             b"15",
             b"00"])
-        connection.serial.write(command)
-        ret = connection.serial.read()
-        if ret != b'k':
+        connection.send(command)
+        ret = connection.receive()
+        if (ret != b'k') or (ret is None):
             raise ExecutionError(
                 "Error while requesting status. Command {}, got {}".format(
                     command, ret))
